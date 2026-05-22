@@ -18,10 +18,9 @@ app.add_middleware(
 Search endpoint
 """
 @app.get("/search")
-def search_news(q: str):
+async def search_news(q: str):
 
-    results = fetch_hackernews(q)
-
+    results = await fetch_hackernews(q)
     return {
         "results": results
     }

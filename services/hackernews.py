@@ -1,27 +1,49 @@
-import requests
+import asyncio
+import httpx
+
+"""
+Fetch single Hacker News story
+"""
+async def fetch_story(client, story_id):
+
+    story_url = (
+        f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json"
+    )
+
+    response = await client.get(story_url)
+
+    return response.json()
+
 
 """
 Fetch and filter Hacker News stories
 """
-def fetch_hackernews(search: str):
+async def fetch_hackernews(search: str):
 
-    # Fetch story IDs
-    ids_url = "https://hacker-news.firebaseio.com/v0/topstories.json"
+    ids_url = (
+        "https://hacker-news.firebaseio.com/v0/topstories.json"
+    )
 
-    ids = requests.get(ids_url).json()
+    async with httpx.AsyncClient() as client:
 
-    # Limit stories
-    top_ids = ids[:30]
+        # Fetch story IDs
+        ids_response = await client.get(ids_url)
 
-    stories = []
+        ids = ids_response.json()
 
-    for story_id in top_ids:
+        top_ids = ids[:30]
 
-        story_url = (
-            f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json"
-        )
+        # Fetch all stories concurrently
+        tasks = [
+            fetch_story(client, story_id)
+            for story_id in top_ids
+        ]
 
-        story = requests.get(story_url).json()
+        stories = await asyncio.gather(*tasks)
+
+    filtered = []
+
+    for story in stories:
 
         if not story:
             continue
@@ -35,7 +57,7 @@ def fetch_hackernews(search: str):
             search.lower() in text
         ):
 
-            stories.append({
+            filtered.append({
                 "id": story.get("id"),
                 "title": story.get("title"),
                 "by": story.get("by"),
@@ -43,4 +65,4 @@ def fetch_hackernews(search: str):
                 "url": story.get("url")
             })
 
-    return stories
+    return filtered
