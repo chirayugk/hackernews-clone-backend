@@ -10,7 +10,9 @@ from services.ai_summary import summarize_text
 from services.article_extractor import extract_article_text
 
 from services.hackernews import fetch_hackernews
+import os
 
+SECRET_KEY = os.getenv("TECHPULSE_SECRET")
 app = FastAPI()
 
 # Enable frontend access
@@ -69,3 +71,12 @@ async def summarize_article(
         "summary": summary,
         "cached":False
     }    
+
+
+@app.post("/verify-secret")
+async def verify_secret(data: dict):
+
+    if data["secret"] == SECRET_KEY:
+        return {"valid": True}
+
+    return {"valid": False}
