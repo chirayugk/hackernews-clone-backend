@@ -32,7 +32,7 @@ async def fetch_hackernews(search: str):
 
         ids = ids_response.json()
 
-        top_ids = ids[:500]
+        top_ids = ids[:100]
 
         # Fetch all stories concurrently
         tasks = [
