@@ -12,10 +12,10 @@ def load_cache():
             return json.load(f)
 
 
-def save_cache():
+def save_cache(cache):
      
     with open(CACHE_FILE, "w") as f:
-        json.dump("cache", f, indent=2)
+        json.dump(cache, f, indent=2)
 
 def get_cached_summary(url: str):
 

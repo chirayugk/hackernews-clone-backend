@@ -1,5 +1,6 @@
 import asyncio
 import httpx
+import requests
 
 """
 Fetch single Hacker News story
@@ -31,7 +32,7 @@ async def fetch_hackernews(search: str):
 
         ids = ids_response.json()
 
-        top_ids = ids[:30]
+        top_ids = ids[:500]
 
         # Fetch all stories concurrently
         tasks = [
@@ -39,12 +40,13 @@ async def fetch_hackernews(search: str):
             for story_id in top_ids
         ]
 
-        stories = await asyncio.gather(*tasks)
+        stories = await asyncio.gather(*tasks,return_exceptions=True)
 
     filtered = []
 
     for story in stories:
-
+        if isinstance(story, Exception):
+            continue
         if not story:
             continue
 
@@ -66,3 +68,19 @@ async def fetch_hackernews(search: str):
             })
 
     return filtered
+
+def get_trending_news(limit=10):
+    top_stories=requests.get("https://hacker-news.firebaseio.com/v0/topstories.json").json()
+    results=[]
+
+    for story_id in top_stories[:limit]:
+        story=requests.get( f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json").json()
+
+        results.append({
+            "id":story.get("id"),
+            "title":story.get("title"),
+            "by":story.get("by"),
+            "score": story.get("score"),
+            "url": story.get("url")
+        })
+    return results    
